@@ -1,36 +1,41 @@
-import fetch from 'node-fetch';
-import { Team, TeamsResponse, TeamDetails, SpendData } from './models';
+import { exec } from 'child_process';
+import { promisify } from 'util';
+import { TeamsResponse, TeamDetails, SpendData } from './models';
 
+const execAsync = promisify(exec);
 const BASE_URL = 'https://www.cursor.com/api/dashboard';
 
 /**
- * A generic and secure wrapper for making POST requests to the Cursor API.
+ * A generic and secure wrapper for making POST requests to the Cursor API using curl.
  * It ensures the cookie is only used here and not logged.
  * @param endpoint The API endpoint to hit.
- * @param cookie The user's authentication cookie.
+ * @param userCookie The user's authentication cookie.
  * @param body The request body.
  * @returns A promise that resolves to the JSON response.
  */
-async function post<T>(endpoint: string, cookie: string, body: object): Promise<T> {
+async function post<T>(endpoint: string, userCookie: string, body: object): Promise<T> {
     const url = `${BASE_URL}/${endpoint}`;
-    console.log(`[Cursor Usage] Fetching data from ${endpoint}`);
+    console.log(`[Cursor Usage] Fetching data from ${endpoint} using curl`);
+
+    const escapedBody = JSON.stringify(body).replace(/'/g, "'\\''");
+    const escapedCookie = userCookie.replace(/'/g, "'\\''");
     
-    const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Cookie': `WorkosCursorSessionToken=${cookie}`,
-        },
-        body: JSON.stringify(body),
-    });
+    const command = `curl -s -L '${url}' \
+      -H 'Content-Type: application/json' \
+      -b 'WorkosCursorSessionToken=${escapedCookie}' \
+      --data-raw '${escapedBody}'`;
 
-    if (!response.ok) {
-        // We avoid logging the response body here as it could contain sensitive information.
-        console.error(`[Cursor Usage] API Error on ${endpoint}: ${response.status} ${response.statusText}`);
-        throw new Error(`Failed to fetch data from ${endpoint}. Status: ${response.status}`);
+    try {
+        const { stdout } = await execAsync(command);
+        if (!stdout) {
+            throw new Error("curl command returned empty stdout");
+        }
+        return JSON.parse(stdout) as T;
+    } catch (error: any) {
+        console.error(`[Cursor Usage] curl command failed for ${endpoint}: ${error.message}`);
+        // Re-throw the error to be handled by the calling function
+        throw error;
     }
-
-    return response.json() as Promise<T>;
 }
 
 /** Fetches all teams the user belongs to. */

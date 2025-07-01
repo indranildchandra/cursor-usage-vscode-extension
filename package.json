@@ -6,12 +6,13 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/your-username/your-repo-name.git"
+    "url": "https://github.com/YossiSaadi/cursor-usage-vscode-extension.git"
   },
   "publisher": "cursor-usage",
   "engines": {
     "vscode": "^1.74.0"
   },
+  "icon": "./assets/logo.png",
   "categories": [
     "Other"
   ],
@@ -30,7 +31,27 @@
       },
       {
         "command": "cursorUsage.refresh",
-        "title": "Refresh remaining requests",
+        "title": "Refresh Usage",
+        "category": "Cursor Usage Extension"
+      },
+      {
+        "command": "cursorUsage.forceRefresh",
+        "title": "Force Re-initialize",
+        "category": "Cursor Usage Extension"
+      },
+      {
+        "command": "cursorUsage.openSettings",
+        "title": "Open Settings",
+        "category": "Cursor Usage Extension"
+      },
+      {
+        "command": "cursorUsage.setTeamId",
+        "title": "Set Team ID",
+        "category": "Cursor Usage Extension"
+      },
+      {
+        "command": "cursorUsage.setPollMinutes",
+        "title": "Set Poll Interval",
         "category": "Cursor Usage Extension"
       }
     ],
@@ -46,7 +67,7 @@
         "cursorUsage.teamId": {
           "type": "string",
           "default": "",
-          "description": "(Optional) Your Cursor Team ID. If you belong to multiple teams, you can specify which one to track. Find the ID in your browser's developer tools (in the 'teams' API request) when viewing the Cursor dashboard."
+          "description": "(Optional) Your Cursor Team ID. Leave empty or set to 'auto' to auto-detect. If you belong to multiple teams, specify which one to track. Find the ID in your browser's developer tools (in the 'teams' API request) when viewing the Cursor dashboard."
         }
       }
     }
@@ -59,16 +80,14 @@
   },
   "devDependencies": {
     "@types/vscode": "^1.74.0",
-    "@types/node": "16.x",
-    "@types/node-fetch": "^2.6.4",
+    "@types/node": "^20.12.0",
     "typescript": "^4.9.4",
     "esbuild": "^0.19.5",
-    "@vscode/vsce": "^2.21.1"
+    "@vscode/vsce": "^2.21.1",
+    "prettier": "^3.6.2"
   },
-  "dependencies": {
-    "node-fetch": "^2.6.7"
-  },
+  "dependencies": {},
   "resolutions": {
     "undici": "5.28.3"
   }
-} 
+}

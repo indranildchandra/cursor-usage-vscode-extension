@@ -10,6 +10,7 @@ This extension displays your remaining Cursor fast-premium requests count in Cur
 - **Smart color coding**: Visual warnings when you're running low
 - **Click to refresh**: Quick manual refresh by clicking the status bar
 - **Automatic updates**: Configurable polling to keep data fresh
+- **Command Palette Access**: All key actions are available via commands.
 
 ## How It Works
 
@@ -32,51 +33,68 @@ You'll need to extract your `WorkosCursorSessionToken` cookie from your browser:
 2. Open your browser's Developer Tools (F12)
 3. Navigate to **Application** → **Cookies** → `https://cursor.com`
 4. Find `WorkosCursorSessionToken` and copy its value
-5. In VS Code, run command: `Cursor Usage Extension: Insert cookie value`
+5. In VS Code, run command: `Cursor Usage: Insert cookie value`
 6. Paste the cookie value when prompted
 
 ### 2. Team ID (Optional)
 
-If you belong to multiple Cursor teams, you may want to specify which team to track:
+If you belong to multiple Cursor teams, you may want to specify which team to track. You can set this via the `Cursor Usage: Set Team ID` command or in your settings.
 
-1. While logged into Cursor, open Developer Tools
-2. Go to **Network** tab and refresh the dashboard
-3. Find the `teams` API request and note your desired team's `id`
-4. Set `cursorUsage.teamId` in VS Code settings
+- To auto-detect, leave the value empty or enter `auto`. The extension will use the first team it finds and cache the ID.
+- To specify a team, find its `id` in the `teams` API request in your browser's network tab and enter it.
 
 If you don't set a team ID, the extension will automatically use your first team.
 
 ## Configuration
 
-| Setting | Default | Description |
-|---------|---------|-------------|
-| `cursorUsage.pollMinutes` | `30` | How often to refresh the count (in minutes) |
-| `cursorUsage.teamId` | `""` | Specific team ID to track (leave empty for auto-detection) |
+| Setting                 | Default | Description                                                  |
+| ----------------------- | ------- | ------------------------------------------------------------ |
+| `cursorUsage.pollMinutes` | `30`    | How often to refresh the count (in minutes).                 |
+| `cursorUsage.teamId`      | `""`    | Specific team ID to track. Leave empty or set to `auto` for auto-detection. |
 
 ## Commands
 
-- **Insert cookie value**: Store your authentication cookie securely
-- **Refresh remaining requests**: Manually update the request count
+All commands are available from the Command Palette (`Cmd+Shift+P`).
 
-*Tip: Click the status bar item to quickly refresh your usage data*
+| Command                  | Description                                            |
+| ------------------------ | ------------------------------------------------------ |
+| `Refresh Usage`          | Manually refreshes the usage data.                     |
+| `Insert cookie value`    | Prompts you to paste and store your session cookie.    |
+| `Set Team ID`            | Opens an input to set your Team ID.                    |
+| `Set Poll Interval`      | Opens an input to configure the refresh interval.      |
+| `Force Re-initialize`    | Resets the extension, clears the cache, and forces a full data refresh. Useful if something seems stuck. |
+| `Open Settings`          | Opens the extension's settings UI.                     |
+
+*Tip: Click the status bar item to quickly refresh your usage data.*
 
 ## Security & Privacy
 
 Your security is paramount, so here's exactly what happens with your data:
 
+### Why We Need Your Cookie
+
+A fair question! Currently, Cursor's API only provides API tokens to users with "Admin" roles. This means that if you're a "Team Member," there's no official way to programmatically check your usage stats.
+
+This extension bridges that gap by using the same session cookie your browser uses to talk to the Cursor dashboard. It's the only way to get you the usage data you need, right in your editor. We keep our fingers crossed that a more direct API will be available for everyone in the future!
+
 ### Cookie Storage
+
 - Your session cookie is stored using VS Code's **SecretStorage API** — the same secure mechanism used by official extensions
 - The cookie never leaves your local machine except for direct API calls to Cursor
 - It's encrypted and isolated from other extensions
 - No logging or caching of sensitive data
 
+Don't just take our word for it, though. This extension is fully open-source. Feel free to grab your magnifying glass, put on your detective hat, and inspect the code yourself :)
+
 ### Data Usage
+
 - **We don't store anything**: Your cookie and usage data never reach us
 - **Direct communication**: Extension talks directly to `cursor.com/api/dashboard`
 - **Minimal data**: Only fetches essential usage information
 - **No tracking**: Zero analytics, telemetry, or data collection
 
 ### What Gets Sent
+
 The extension only makes authenticated requests to these Cursor endpoints:
 - `/api/dashboard/teams` - to get your team list
 - `/api/dashboard/team` - to get your user ID
@@ -99,26 +117,28 @@ We welcome contributions! Here's how to get started:
 
 ### Development Setup
 
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/your-username/cursor-usage-vscode-extension.git
-   cd cursor-usage-vscode-extension
-   ```
+This project uses Node.js v20. If you use `nvm`, you can run `nvm use` to automatically switch to the correct version.
 
-2. **Install dependencies**
-   ```bash
-   yarn install
-   ```
+1.  **Clone the repository**
+    ```bash
+    git clone https://github.com/YossiSaadi/cursor-usage-vscode-extension.git
+    cd cursor-usage-vscode-extension
+    ```
 
-3. **Start development**
-   ```bash
-   yarn watch
-   ```
+2.  **Install dependencies**
+    ```bash
+    yarn install
+    ```
 
-4. **Test your changes**
-   - Press `F5` in VS Code to launch Extension Development Host
-   - Test the extension functionality
-   - Check the Debug Console for logs
+3.  **Start the watcher**
+    ```bash
+    yarn watch
+    ```
+
+4.  **Launch the debugger**
+    - Press `F5` in VS Code to open the **Extension Development Host**.
+    - This will run the extension in a new VS Code window, where you can test its functionality.
+    - Check the **Debug Console** in your original editor window for logs.
 
 ### Building for Release
 
@@ -133,16 +153,18 @@ vsce package
 ## Troubleshooting
 
 **Status bar shows "Set Cookie"**
-- Your session cookie isn't set or has expired
-- Re-run the "Insert cookie value" command
+- Your session cookie isn't set or has expired.
+- Re-run the `Cursor Usage: Insert cookie value` command.
 
 **Status bar shows "Team ID?"**
-- Can't auto-detect your team (you might belong to multiple teams)
-- Set `cursorUsage.teamId` in settings manually
+- The extension can't auto-detect your team, or the cached ID is invalid.
+- Run the `Cursor Usage: Set Team ID` command to set it manually.
+- If issues persist, try running `Cursor Usage: Force Re-initialize`.
 
-**Status bar shows "Refresh Failed"**
-- Network connectivity issue or Cursor API is down
-- Cookie might have expired - try refreshing it
+**Status bar shows "Refresh Failed" or "Team ID ?"**
+- There may be a network connectivity issue or the Cursor API is down.
+- Your cookie might have expired; try re-inserting it.
+- Run the `Cursor Usage: Force Re-initialize` command.
 
 ## License
 

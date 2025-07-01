@@ -18,7 +18,18 @@ export function activate(context: vscode.ExtensionContext) {
 	const insertCookieCommand = vscode.commands.registerCommand('cursorUsage.insertCookie', () => insertCookie(context));
 	const refreshCommand = vscode.commands.registerCommand('cursorUsage.refresh', () => refreshUsage(context));
 	const openSettingsCommand = vscode.commands.registerCommand('cursorUsage.openSettings', openSettings);
-	context.subscriptions.push(statusBar.getStatusBarItem(), insertCookieCommand, refreshCommand, openSettingsCommand);
+	const forceRefreshCommand = vscode.commands.registerCommand('cursorUsage.forceRefresh', () => forceRefresh(context));
+	const setTeamIdCommand = vscode.commands.registerCommand('cursorUsage.setTeamId', setTeamId);
+	const setPollMinutesCommand = vscode.commands.registerCommand('cursorUsage.setPollMinutes', setPollMinutes);
+	context.subscriptions.push(
+		statusBar.getStatusBarItem(),
+		insertCookieCommand,
+		refreshCommand,
+		openSettingsCommand,
+		forceRefreshCommand,
+		setTeamIdCommand,
+		setPollMinutesCommand
+	);
 
 	// Initial refresh and setup the timer for periodic refreshes.
 	refreshUsage(context);
@@ -26,8 +37,23 @@ export function activate(context: vscode.ExtensionContext) {
 
 	// Listen for configuration changes to update the refresh timer interval.
 	const configChangeListener = vscode.workspace.onDidChangeConfiguration(event => {
+		let shouldRefresh = false;
+
 		if (event.affectsConfiguration('cursorUsage.pollMinutes')) {
 			setupRefreshTimer(context);
+		}
+		
+		if (event.affectsConfiguration('cursorUsage.teamId')) {
+			// Team ID changed, clear the cached one if it exists
+			const teamId = config.getTeamIdFromSettings();
+			if (teamId) {
+				context.workspaceState.update('cursor.teamId', undefined);
+			}
+			shouldRefresh = true;
+		}
+
+		if (shouldRefresh) {
+			refreshUsage(context);
 		}
 	});
 	context.subscriptions.push(configChangeListener);
@@ -96,7 +122,7 @@ async function refreshUsage(context: vscode.ExtensionContext): Promise<void> {
 			return;
 		}
 
-		const teamId = await getTeamId(cookie);
+		const teamId = await getTeamId(context, cookie);
 		if (!teamId) {
 			statusBar.setStatusBarError('Team ID?');
 			vscode.window.showErrorMessage('Could not determine your Cursor Team ID. Please set it in the extension settings.');
@@ -133,27 +159,40 @@ async function refreshUsage(context: vscode.ExtensionContext): Promise<void> {
  * @param cookie The user's authentication cookie.
  * @returns The team ID number or undefined if not found.
  */
-async function getTeamId(cookie: string): Promise<number | undefined> {
+async function getTeamId(context: vscode.ExtensionContext, cookie: string): Promise<number | undefined> {
 	const teamIdFromSettings = config.getTeamIdFromSettings();
-	if (teamIdFromSettings && !isNaN(parseInt(teamIdFromSettings, 10))) {
+	if (teamIdFromSettings && teamIdFromSettings.toLowerCase() === 'auto') {
+		// If set to "auto", clear settings and proceed to auto-detect
+		await vscode.workspace.getConfiguration('cursorUsage').update('teamId', '', vscode.ConfigurationTarget.Global);
+	} else if (teamIdFromSettings && !isNaN(parseInt(teamIdFromSettings, 10))) {
 		const teamId = parseInt(teamIdFromSettings, 10);
 		console.log(`[Cursor Usage] Using Team ID from settings: ${teamId}`);
 		return teamId;
 	}
 
-	console.log('[Cursor Usage] Team ID not in settings, attempting to fetch automatically.');
+	// Try to get from cache first
+	const cachedTeamId = context.workspaceState.get<number>('cursor.teamId');
+	if (cachedTeamId) {
+		console.log(`[Cursor Usage] Using cached Team ID: ${cachedTeamId}`);
+		return cachedTeamId;
+	}
+
+	console.log('[Cursor Usage] Team ID not in settings or cache, attempting to fetch automatically.');
 	try {
 		const response = await api.fetchTeams(cookie);
 		if (response && response.teams && response.teams.length > 0) {
 			const teamId = response.teams[0].id;
-			console.log(`[Cursor Usage] Automatically detected Team ID: ${teamId}`);
+			console.log(`[Cursor Usage] Automatically detected and cached Team ID: ${teamId}`);
+			// Cache the detected team ID
+			await context.workspaceState.update('cursor.teamId', teamId);
 			return teamId;
 		}
 		console.warn("[Cursor Usage] No teams found for this user.");
 		return undefined;
 	} catch (error: any) {
 		console.error(`[Cursor Usage] Failed to auto-detect Team ID: ${error.message}`);
-		return undefined;
+		// Re-throwing the error to be caught by refreshUsage
+		throw error;
 	}
 }
 
@@ -173,4 +212,59 @@ function setupRefreshTimer(context: vscode.ExtensionContext): void {
 	}, pollIntervalMs);
 
 	console.log(`[Cursor Usage] Refresh timer set to ${pollMinutes} minutes.`);
+}
+
+/**
+ * Resets the extension by clearing the cache, re-initializing the timer, and forcing a refresh.
+ * @param context The extension context.
+ */
+async function forceRefresh(context: vscode.ExtensionContext) {
+	console.log('[Cursor Usage] Forcing a full refresh...');
+	// Clear cached data
+	await context.workspaceState.update('cursor.teamId', undefined);
+	console.log('[Cursor Usage] Cleared cached Team ID.');
+
+	// Reset and setup timer
+	setupRefreshTimer(context);
+	
+	// Refresh usage data
+	await refreshUsage(context);
+	vscode.window.showInformationMessage('Cursor Usage extension has been re-initialized.');
+}
+
+/**
+ * Shows an input box to let the user set their Team ID.
+ */
+async function setTeamId() {
+	const teamId = await vscode.window.showInputBox({
+		prompt: "(Optional) Your Cursor Team ID. Leave empty or set to 'auto' to auto-detect.",
+		placeHolder: "Enter your Team ID or 'auto'",
+		value: config.getTeamIdFromSettings() || ''
+	});
+
+	// Undefined means the user cancelled the input box
+	if (teamId !== undefined) {
+		await vscode.workspace.getConfiguration('cursorUsage').update('teamId', teamId, vscode.ConfigurationTarget.Global);
+		vscode.window.showInformationMessage(`Cursor Team ID set to: ${teamId || 'auto'}`);
+	}
+}
+
+/**
+ * Shows an input box to let the user set the poll interval.
+ */
+async function setPollMinutes() {
+	const pollMinutes = await vscode.window.showInputBox({
+		prompt: "How often to refresh the remaining requests count (in minutes)",
+		placeHolder: "Enter a number in minutes",
+		value: String(config.getPollMinutes()),
+		validateInput: text => {
+			const num = parseInt(text, 10);
+			return isNaN(num) || num <= 0 ? "Please enter a positive number." : null;
+		}
+	});
+
+	if (pollMinutes !== undefined) {
+		await vscode.workspace.getConfiguration('cursorUsage').update('pollMinutes', parseInt(pollMinutes, 10), vscode.ConfigurationTarget.Global);
+		vscode.window.showInformationMessage(`Cursor poll interval set to: ${pollMinutes} minutes.`);
+	}
 } 
