@@ -52,17 +52,23 @@
     }
   },
   "scripts": {
-    "vscode:prepublish": "npm run compile",
-    "compile": "tsc -p ./",
-    "watch": "tsc -watch -p ./"
+    "vscode:prepublish": "yarn compile --minify",
+    "compile": "esbuild ./src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --format=cjs --platform=node",
+    "watch": "yarn compile --watch",
+    "package": "vsce package --no-dependencies"
   },
   "devDependencies": {
     "@types/vscode": "^1.74.0",
     "@types/node": "16.x",
     "@types/node-fetch": "^2.6.4",
-    "typescript": "^4.9.4"
+    "typescript": "^4.9.4",
+    "esbuild": "^0.19.5",
+    "@vscode/vsce": "^2.21.1"
   },
   "dependencies": {
     "node-fetch": "^2.6.7"
+  },
+  "resolutions": {
+    "undici": "5.28.3"
   }
 } 
