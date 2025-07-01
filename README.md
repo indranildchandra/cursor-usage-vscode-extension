@@ -6,7 +6,7 @@
 
 This extension displays your remaining Cursor fast-premium requests count in Cursor's status bar, updating automatically so you never get caught off-guard when you're about to hit your limit. Think of it as your personal AI usage speedometer.
 
-- **Real-time tracking**: See your remaining requests at a glance (e.g., `⚡ 247/500`)
+- **Real-time tracking**: See your remaining requests at a glance (e.g., `⚡ 247`)
 - **Smart color coding**: Visual warnings when you're running low
 - **Click to refresh**: Quick manual refresh by clicking the status bar
 - **Automatic updates**: Configurable polling to keep data fresh

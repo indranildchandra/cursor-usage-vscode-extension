@@ -35,7 +35,7 @@ export function updateStatusBar(remainingRequests: number) {
         statusBarItem.backgroundColor = new vscode.ThemeColor('statusBarItem.warningBackground');
     }
     
-    statusBarItem.text = `${icon} ${remainingRequests}/${TOTAL_REQUESTS}`;
+    statusBarItem.text = `${icon} ${remainingRequests}`;
 }
 
 /**
