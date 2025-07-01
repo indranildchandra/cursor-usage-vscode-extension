@@ -1,4 +1,8 @@
-node_modules/
+# dependencies
+/node_modules
+
+# env file
 .env
+
 dist/
 *.vsix
