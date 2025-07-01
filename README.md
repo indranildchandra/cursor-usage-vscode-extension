@@ -105,7 +105,7 @@ That's it. No third parties, no external services, no funny business.
 
 ## Installation
 
-This extension is available on [Open VSX Registry](https://open-vsx.org/) (not VS Code Marketplace, since it's specifically for Cursor users):
+This extension is available on [Open VSX Registry](https://open-vsx.org/extension/yossisa/cursor-usage) (not VS Code Marketplace, since it's specifically for Cursor users).
 
 1. Open Cursor
 2. Go to Extensions panel
