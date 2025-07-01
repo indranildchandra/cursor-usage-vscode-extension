@@ -44,8 +44,17 @@ export function updateStatusBar(remainingRequests: number) {
  */
 export function setStatusBarError(message?: string) {
     if (!statusBarItem) { return; }
-    statusBarItem.text = `$(error) ${message || 'Error'}`;
+    const displayMessage = message || 'Error';
+    statusBarItem.text = `$(error) ${displayMessage}`;
     statusBarItem.backgroundColor = new vscode.ThemeColor('statusBarItem.errorBackground');
+
+    if (displayMessage === 'Team ID?') {
+        statusBarItem.command = 'cursorUsage.openSettings';
+        statusBarItem.tooltip = 'Click to set your Team ID in settings';
+    } else {
+        statusBarItem.command = 'cursorUsage.refresh';
+        statusBarItem.tooltip = 'Click to refresh usage data';
+    }
 }
 
 /**
@@ -56,6 +65,17 @@ export function setStatusBarWarning(message: string) {
     if (!statusBarItem) { return; }
     statusBarItem.text = `$(warning) ${message}`;
     statusBarItem.backgroundColor = new vscode.ThemeColor('statusBarItem.warningBackground');
+
+    // If the warning is about setting the cookie, make the status bar item clickable
+    // to trigger the cookie insertion command.
+    if (message === 'Set Cookie') {
+        statusBarItem.command = 'cursorUsage.insertCookie';
+        statusBarItem.tooltip = 'Click to set your Cursor session cookie';
+    } else {
+        // Reset to default refresh command if the warning is something else
+        statusBarItem.command = 'cursorUsage.refresh';
+        statusBarItem.tooltip = 'Click to refresh usage data';
+    }
 }
 
 /**

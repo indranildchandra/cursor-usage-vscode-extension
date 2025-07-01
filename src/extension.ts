@@ -17,7 +17,8 @@ export function activate(context: vscode.ExtensionContext) {
 	// Register all commands and add them to subscriptions
 	const insertCookieCommand = vscode.commands.registerCommand('cursorUsage.insertCookie', () => insertCookie(context));
 	const refreshCommand = vscode.commands.registerCommand('cursorUsage.refresh', () => refreshUsage(context));
-	context.subscriptions.push(statusBar.getStatusBarItem(), insertCookieCommand, refreshCommand);
+	const openSettingsCommand = vscode.commands.registerCommand('cursorUsage.openSettings', openSettings);
+	context.subscriptions.push(statusBar.getStatusBarItem(), insertCookieCommand, refreshCommand, openSettingsCommand);
 
 	// Initial refresh and setup the timer for periodic refreshes.
 	refreshUsage(context);
@@ -71,6 +72,13 @@ async function insertCookie(context: vscode.ExtensionContext): Promise<void> {
 		console.error(`[Cursor Usage] Failed to save cookie: ${error.message}`);
 		vscode.window.showErrorMessage(`Failed to save cookie: ${error.message}`);
 	}
+}
+
+/**
+ * Opens the VS Code settings UI focused on this extension's settings.
+ */
+function openSettings(): void {
+	vscode.commands.executeCommand('workbench.action.openSettings', '@ext:cursor-usage.cursor-usage');
 }
 
 /**
