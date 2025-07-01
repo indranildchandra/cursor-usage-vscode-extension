@@ -1,4 +1,11 @@
 /**
+ * Represents the response from the /api/dashboard/teams endpoint.
+ */
+export interface TeamsResponse {
+    teams: Team[];
+}
+
+/**
  * Represents a team as returned by the /api/dashboard/teams endpoint.
  */
 export interface Team {

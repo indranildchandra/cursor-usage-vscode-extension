@@ -143,9 +143,9 @@ async function getTeamId(cookie: string): Promise<number | undefined> {
 
 	console.log('[Cursor Usage] Team ID not in settings, attempting to fetch automatically.');
 	try {
-		const teams = await api.fetchTeams(cookie);
-		if (teams && teams.length > 0) {
-			const teamId = teams[0].id;
+		const response = await api.fetchTeams(cookie);
+		if (response && response.teams && response.teams.length > 0) {
+			const teamId = response.teams[0].id;
 			console.log(`[Cursor Usage] Automatically detected Team ID: ${teamId}`);
 			return teamId;
 		}

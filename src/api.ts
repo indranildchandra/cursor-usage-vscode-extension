@@ -1,5 +1,5 @@
 import fetch from 'node-fetch';
-import { Team, TeamDetails, SpendData } from './models';
+import { Team, TeamsResponse, TeamDetails, SpendData } from './models';
 
 const BASE_URL = 'https://www.cursor.com/api/dashboard';
 
@@ -34,8 +34,8 @@ async function post<T>(endpoint: string, cookie: string, body: object): Promise<
 }
 
 /** Fetches all teams the user belongs to. */
-export async function fetchTeams(cookie: string): Promise<Team[]> {
-    return post<Team[]>('teams', cookie, {});
+export async function fetchTeams(cookie: string): Promise<TeamsResponse> {
+    return post<TeamsResponse>('teams', cookie, {});
 }
 
 /** Fetches details for a specific team, including the user's ID within that team. */
