@@ -1,0 +1,68 @@
+{
+  "name": "cursor-usage",
+  "displayName": "Cursor Usage Extension",
+  "description": "Track your remaining Cursor fast-premium requests in the status bar",
+  "version": "1.0.0",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-username/your-repo-name.git"
+  },
+  "publisher": "cursor-usage",
+  "engines": {
+    "vscode": "^1.74.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onStartupFinished",
+    "onCommand:cursorUsage.insertCookie",
+    "onCommand:cursorUsage.refresh"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "cursorUsage.insertCookie",
+        "title": "Insert cookie value",
+        "category": "Cursor Usage Extension"
+      },
+      {
+        "command": "cursorUsage.refresh",
+        "title": "Refresh remaining requests",
+        "category": "Cursor Usage Extension"
+      }
+    ],
+    "configuration": {
+      "title": "Cursor Usage",
+      "properties": {
+        "cursorUsage.pollMinutes": {
+          "type": "number",
+          "default": 30,
+          "description": "How often to refresh the remaining requests count (in minutes)",
+          "minimum": 1
+        },
+        "cursorUsage.teamId": {
+          "type": "string",
+          "default": "",
+          "description": "(Optional) Your Cursor Team ID. If you belong to multiple teams, you can specify which one to track. Find the ID in your browser's developer tools (in the 'teams' API request) when viewing the Cursor dashboard."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.74.0",
+    "@types/node": "16.x",
+    "@types/node-fetch": "^2.6.4",
+    "typescript": "^4.9.4"
+  },
+  "dependencies": {
+    "node-fetch": "^2.6.7"
+  }
+} 
