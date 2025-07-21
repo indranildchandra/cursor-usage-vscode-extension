@@ -119,42 +119,40 @@ function updateTooltip(
   const usedRequests = TOTAL_REQUESTS - remainingRequests;
   const requestPercentage = ((usedRequests / TOTAL_REQUESTS) * 100).toFixed(1);
 
-  let tooltip = `Cursor Usage:\n` +
-    `• Fast Premium Requests: ${remainingRequests}/${TOTAL_REQUESTS} remaining (${requestPercentage}% used)\n` +
-    `• Click to refresh usage data`;
+  let tooltip = `Fast Premium Requests: ${remainingRequests}/${TOTAL_REQUESTS} remaining (${requestPercentage}% used)`;
 
   if (spendCents !== undefined && hardLimitDollars !== undefined) {
     const spendDollars = spendCents / 100;
     const spendPercentage = ((spendDollars / hardLimitDollars) * 100).toFixed(1);
     const remainingDollars = (hardLimitDollars - spendDollars).toFixed(2);
     
-    tooltip += `\n\nUsage-Based Spending:\n` +
-      `• Current spend: $${spendDollars.toFixed(2)} of $${hardLimitDollars.toFixed(2)} limit (${spendPercentage}% used)\n` +
-      `• Remaining budget: $${remainingDollars}`;
+    tooltip += `\nSpending: $${spendDollars.toFixed(2)} of $${hardLimitDollars.toFixed(2)} limit (${spendPercentage}% used)`;
+    tooltip += `\nRemaining budget: $${remainingDollars}`;
 
-    // Context-aware warnings based on what's being displayed
+    // Add relevant warnings based on current state
     if (remainingRequests > 0) {
-      // When showing requests, only warn about request status
+      // When showing requests, warn about low requests
       if (remainingRequests <= TOTAL_REQUESTS * 0.1) {
-        tooltip += `\n• ⚠️ Low on fast premium requests`;
+        tooltip += `\n⚠️ Low on requests`;
       }
     } else {
       // When showing spending, warn about spending status
       if (spendDollars >= hardLimitDollars) {
-        tooltip += `\n• ⚠️ Spend limit reached!`;
+        tooltip += `\n⚠️ Spend limit reached`;
       } else if (spendDollars / hardLimitDollars >= 0.8) {
-        tooltip += `\n• ⚠️ Approaching spend limit`;
+        tooltip += `\n⚠️ Approaching spend limit`;
       }
-      tooltip += `\n• ⚠️ No fast premium requests remaining`;
     }
   } else {
     // No spending data available
     if (remainingRequests <= 0) {
-      tooltip += `\n• ⚠️ No fast premium requests remaining`;
+      tooltip += `\n⚠️ No requests remaining`;
     } else if (remainingRequests <= TOTAL_REQUESTS * 0.1) {
-      tooltip += `\n• ⚠️ Low on fast premium requests`;
+      tooltip += `\n⚠️ Low on requests`;
     }
   }
+
+  tooltip += `\n\nClick to refresh`;
 
   statusBarItem.tooltip = tooltip;
 }
