@@ -4,6 +4,14 @@ import * as statusBar from "./statusBar";
 import * as config from "./configuration";
 import { TeamMemberSpend } from "./models";
 
+// Define an interface for Notification state object for type safety
+interface NotificationState {
+  date: string;
+  attempts: number;
+  sent: boolean;
+}
+
+const NOTIFICATION_STATE_KEY = "dailyNotificationState";
 let refreshTimer: NodeJS.Timeout | undefined;
 
 /**
@@ -80,6 +88,7 @@ export function activate(context: vscode.ExtensionContext) {
   // Initial refresh and setup the timer for periodic refreshes.
   refreshUsage(context);
   setupRefreshTimer(context);
+  initializeNotificationService(context);
 
   // Listen for configuration changes to update the refresh timer interval.
   const configChangeListener = vscode.workspace.onDidChangeConfiguration(
@@ -116,6 +125,98 @@ export function deactivate() {
   if (refreshTimer) {
     clearInterval(refreshTimer);
   }
+}
+
+function initializeNotificationService(context: vscode.ExtensionContext) {
+  // 1. Run an immediate check on startup.
+  checkAndSendNotification(context);
+
+  // 2. Schedule the recurring check for 9 AM daily.
+  const now = new Date();
+  const nextNineAM = new Date();
+  nextNineAM.setHours(9, 0, 0, 0);
+
+  if (now > nextNineAM) {
+    nextNineAM.setDate(nextNineAM.getDate() + 1);
+  }
+
+  const timeUntilNextNineAM = nextNineAM.getTime() - now.getTime();
+
+  setTimeout(() => {
+    checkAndSendNotification(context);
+
+    setInterval(() => {
+      checkAndSendNotification(context);
+    }, 24 * 60 * 60 * 1000); // 24 hours
+  }, timeUntilNextNineAM);
+}
+
+export async function checkAndSendNotification(context: vscode.ExtensionContext) {
+  const now = new Date();
+  const todayStr = now.toISOString().split("T")[0]; // YYYY-MM-DD format
+
+  let state = context.globalState.get<NotificationState>(NOTIFICATION_STATE_KEY);
+
+  // If it's a new day, reset the state
+  if (!state || state.date !== todayStr) {
+    state = { date: todayStr, attempts: 0, sent: false };
+  }
+
+  // --- GUARD CLAUSES ---
+  // 1. Already sent today? Do nothing.
+  if (state.sent) {
+    return;
+  }
+  // 2. Reached attempt limit? Do nothing.
+  if (state.attempts >= 3) {
+    return;
+  }
+  // 3. Is it before 9 AM? Do nothing.
+  if (now.getHours() < 9) {
+    return;
+  }
+
+  // If all guards pass, proceed with delivery attempt
+  state.attempts++;
+
+  try {
+    const usageStats = await getUsageStats(context);
+    if (usageStats) {
+      vscode.window.showInformationMessage(`Cursor Daily Usage: ${usageStats}`);
+
+      // Mark as sent ONLY on success
+      state.sent = true;
+      console.log("Daily usage notification sent successfully.");
+    } else {
+      console.log(
+        "Could not retrieve valid usage stats. Skipping notification."
+      );
+    }
+  } catch (error) {
+    console.error("Failed to send daily usage notification:", error);
+  } finally {
+    // ALWAYS update the state to save attempt count and sent status
+    context.globalState.update(NOTIFICATION_STATE_KEY, state);
+  }
+}
+
+export async function getUsageStats(
+  context: vscode.ExtensionContext
+): Promise<string | null> {
+  await refreshUsage(context);
+  const statusBarItem = statusBar.getStatusBarItem();
+
+  // Don't show notification for loading, error, or initial setup states.
+  if (
+    statusBarItem.text.includes("Loading") ||
+    statusBarItem.text.includes("Failed") ||
+    statusBarItem.text.includes("Set Cookie") ||
+    statusBarItem.text.includes("Team ID?")
+  ) {
+    return null;
+  }
+
+  return statusBarItem.text;
 }
 
 /**

@@ -74,20 +74,33 @@
     }
   },
   "scripts": {
-    "vscode:prepublish": "yarn compile --minify",
-    "compile": "esbuild ./src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --format=cjs --platform=node",
-    "watch": "yarn compile --watch",
+    "vscode:prepublish": "yarn compile-extension --minify",
+    "compile-extension": "esbuild ./src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --format=cjs --platform=node",
+    "compile-tests": "tsc -p ./",
+    "watch": "yarn compile-extension --watch",
+    "compile": "yarn compile-extension && yarn compile-tests",
+    "package-vsix": "vsce package",
     "package": "vsce package --no-dependencies",
     "publish:ovsx": "dotenv -e .env -- npx ovsx publish"
   },
   "devDependencies": {
+    "@types/chai": "^4.3.16",
+    "@types/glob": "^8.1.0",
+    "@types/mocha": "^10.0.6",
     "@types/node": "^20.12.0",
+    "@types/sinon": "^17.0.3",
     "@types/vscode": "^1.74.0",
+    "@vscode/test-electron": "2.3.9",
     "@vscode/vsce": "^2.21.1",
+    "chai": "^4.4.1",
+    "dotenv": "^16.4.5",
     "dotenv-cli": "^8.0.0",
     "esbuild": "^0.19.5",
+    "mocha": "^10.4.0",
     "prettier": "^3.6.2",
-    "typescript": "^4.9.4"
+    "sinon": "^18.0.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.0.0"
   },
   "dependencies": {},
   "resolutions": {

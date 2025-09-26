@@ -2,6 +2,7 @@ import * as https from "https";
 import { TeamsResponse, TeamDetails, SpendData, UserMeResponse, UserUsageResponse } from "./models";
 
 const BASE_URL = "https://cursor.com/api";
+const TIMEOUT = 20000; // 20-second timeout for all requests
 
 /**
  * A generic and secure wrapper for making requests to the Cursor API using Node.js https module.
@@ -26,7 +27,8 @@ async function makeRequest<T>(
       "Content-Type": "application/json",
       "Cookie": `WorkosCursorSessionToken=${userCookie}`,
       "Origin": "https://cursor.com"
-    }
+    },
+    timeout: TIMEOUT
   };
 
   return new Promise<T>((resolve, reject) => {
@@ -58,6 +60,12 @@ async function makeRequest<T>(
         `[Cursor Usage] ${method} request failed for ${url}: ${error.message}`
       );
       reject(error);
+    });
+
+    // Handle request timeouts
+    req.on("timeout", () => {
+      req.destroy();
+      reject(new Error(`Request to ${url} timed out after ${TIMEOUT} seconds`));
     });
 
     if (method === "POST" && body) {

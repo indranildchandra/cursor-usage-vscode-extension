@@ -99,7 +99,7 @@ Hover over the status bar item to see comprehensive information:
 
 **When you have requests remaining:**
 
-```
+```text
 Resets in 23 days (2024-02-15) · 8.7 requests/day avg
 
 Fast Premium Requests: 247/500 remaining (50.6% used)
@@ -109,7 +109,7 @@ Remaining budget: $148.48
 
 **When requests are exhausted:**
 
-```
+```text
 Resets in 23 days (2024-02-15) · 21.7 requests/day avg
 
 Fast Premium Requests: 0/500 remaining (100% used)
@@ -120,7 +120,7 @@ Remaining budget: $148.48
 
 **With predictive warnings:**
 
-```
+```text
 Resets in 23 days (2024-02-15) · 25.0 requests/day avg
 ⚠️ At current rate, quota exhausted in ~10 days
 
@@ -193,7 +193,7 @@ This extension is available on [Open VSX Registry](https://open-vsx.org/extensio
 
 ## Contributing
 
-We welcome contributions! Here's how to get started:
+We welcome contributions! For information on how to set up the development environment and run the test suite, please see our [Contributing Guide](CONTRIBUTING.md).
 
 ### Development Setup
 
@@ -222,6 +222,17 @@ This project uses Node.js v20. If you use `nvm`, you can run `nvm use` to automa
    - Press `F5` in VS Code to open the **Extension Development Host**.
    - This will run the extension in a new VS Code window, where you can test its functionality.
    - Check the **Debug Console** in your original editor window for logs.
+
+### Running Tests
+
+To run the automated tests, use the following command:
+
+```bash
+# This will compile the extension and run the test suite
+yarn test
+```
+
+The test runner will download and cache an instance of VS Code the first time it's run, then use the cached version for subsequent tests. It will then install the extension and execute the test suite.
 
 ### Building for Release
 
