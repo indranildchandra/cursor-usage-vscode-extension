@@ -36,7 +36,9 @@ CursorTeamId="YOUR_TEAM_ID_HERE"
 
 ### 2. Executing the Test Suite
 
-We use the VS Code debugger to run our tests. This is the most stable and reliable method.
+The test suite can be run in two ways:
+
+#### **Option 1: VS Code Debugger (Recommended for Development)**
 
 1. Go to the **Run and Debug** panel in VS Code (you can click the icon on the left sidebar that looks like a play button with a bug).
 2. In the dropdown at the top, select **"Extension Tests"**.
@@ -49,3 +51,44 @@ This will perform the following steps:
 * Run the test suite.
 
 You will see the results of the test run in the **Debug Console** of your main editor window.
+
+#### **Option 2: Command Line (For Automation/CI)**
+
+```bash
+# Compile and run tests from command line
+yarn test
+```
+
+This method is ideal for:
+
+* Continuous Integration (CI) pipelines
+* Automated testing workflows
+* Running tests without opening VS Code or Cursor
+
+The command-line runner will:
+
+* Compile the extension and test files
+* Use your system's Cursor/VS Code installation (no download needed)
+* Execute the full test suite
+* Return appropriate exit codes for CI systems
+* Automatically detect and use Cursor if available, fall back to VS Code
+
+**Test Output:**
+
+* Command line shows: Basic progress, which editor is being used, and final exit code (0 = success)
+* Test details appear in: The launched Cursor/VS Code instance's Debug Console
+* Design Rationale: VS Code extension tests run in the actual editor environment to test real-world behavior
+
+**To see detailed test results:**
+
+1. **Look for the launched Cursor/VS Code window** that opens automatically
+2. **Check the Debug Console** in that window (View → Debug Console)
+3. **For development debugging**: Use the VS Code debugger method instead
+
+**CI/CD Notes:**
+
+* Tests run successfully in automated environments
+* Uses existing Cursor/VS Code installation
+* No additional downloads required
+* Returns proper exit codes for CI pipeline integration
+* Compatible with most CI platforms (GitHub Actions, Jenkins, etc.)

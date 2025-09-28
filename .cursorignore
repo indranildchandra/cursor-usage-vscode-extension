@@ -4,7 +4,7 @@ build/
 assets/
 # .vscode/
 # .vscode-test/
-.env
+# .env
 *.log
 package-lock.json
 yarn.lock
