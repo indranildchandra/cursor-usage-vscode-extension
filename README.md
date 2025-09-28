@@ -100,7 +100,7 @@ Hover over the status bar item to see comprehensive information:
 **When you have requests remaining:**
 
 ```text
-Resets in 23 days (2024-02-15) · 8.7 requests/day avg
+Resets in 23 days (2024-02-15) --> 8.7 requests/day avg
 
 Fast Premium Requests: 247/500 remaining (50.6% used)
 Spending: $1.52 of $150.00 limit (1.0% used)
@@ -110,7 +110,7 @@ Remaining budget: $148.48
 **When requests are exhausted:**
 
 ```text
-Resets in 23 days (2024-02-15) · 21.7 requests/day avg
+Resets in 23 days (2024-02-15) --> 21.7 requests/day avg
 
 Fast Premium Requests: 0/500 remaining (100% used)
 Spending: $1.52 of $150.00 limit (1.0% used)
@@ -121,8 +121,8 @@ Remaining budget: $148.48
 **With predictive warnings:**
 
 ```text
-Resets in 23 days (2024-02-15) · 25.0 requests/day avg
-⚠️ At current rate, quota exhausted in ~10 days
+Resets in 23 days (2024-02-15) --> 25.0 requests/day avg
+⚠️ At current rate, quota exhausts in ~10 days
 
 Fast Premium Requests: 250/500 remaining (50.0% used)
 Spending: $0.00 of $150.00 limit (0.0% used)
@@ -142,7 +142,7 @@ Additional contextual warnings:
 - `⚠️ Approaching spend limit` (≥80% of budget used)
 - `⚠️ No requests remaining`
 - `⚠️ Spend limit reached!`
-- `⚠️ At current rate, quota exhausted in ~X days`
+- `⚠️ At current rate, quota exhausts in ~X days`
 
 ## Security & Privacy
 

@@ -18,9 +18,7 @@
     "Other"
   ],
   "activationEvents": [
-    "onStartupFinished",
-    "onCommand:cursorUsage.insertCookie",
-    "onCommand:cursorUsage.refresh"
+    "onStartupFinished"
   ],
   "main": "./dist/extension.js",
   "contributes": {
@@ -54,6 +52,12 @@
         "command": "cursorUsage.setPollMinutes",
         "title": "Set Poll Interval",
         "category": "Cursor Usage Extension"
+      },
+      {
+        "command": "cursorUsage.testNotification",
+        "title": "Test Daily Notification",
+        "category": "Cursor Usage Extension",
+        "when": "isDevelopment"
       }
     ],
     "configuration": {
@@ -102,7 +106,10 @@
     "ts-node": "^10.9.2",
     "typescript": "^5.0.0"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@types/node-notifier": "^8.0.5",
+    "node-notifier": "^10.0.1"
+  },
   "resolutions": {
     "undici": "5.28.3"
   }

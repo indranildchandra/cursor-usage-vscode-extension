@@ -2,7 +2,7 @@ import * as https from "https";
 import { TeamsResponse, TeamDetails, SpendData, UserMeResponse, UserUsageResponse } from "./models";
 
 const BASE_URL = "https://cursor.com/api";
-const TIMEOUT = 20000; // 20-second timeout for all requests
+const TIMEOUT = 30000; // 30-second timeout for all requests
 
 /**
  * A generic and secure wrapper for making requests to the Cursor API using Node.js https module.

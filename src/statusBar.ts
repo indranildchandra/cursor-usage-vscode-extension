@@ -172,7 +172,7 @@ function updateTooltip(
 
     // Add daily usage rate to the reset line if available
     if (dailyUsageRate > 0) {
-      resetText += ` · ${dailyUsageRate} requests/day avg`;
+      resetText += ` --> ${dailyUsageRate} requests/day avg`;
     }
 
     tooltip = `${resetText}\n`;
@@ -181,7 +181,7 @@ function updateTooltip(
     if (remainingRequests > 0 && dailyUsageRate > 0) {
       const estimatedDaysLeft = Math.ceil(remainingRequests / dailyUsageRate);
       if (estimatedDaysLeft < resetInfo.daysRemaining) {
-        tooltip += `⚠️ At current rate, quota exhausted in ~${estimatedDaysLeft} days\n`;
+        tooltip += `⚠️ At current rate, quota exhausts in ~${estimatedDaysLeft} days\n`;
       }
     }
 

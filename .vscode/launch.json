@@ -8,10 +8,11 @@
 			"args": [
 				"--extensionDevelopmentPath=${workspaceFolder}",
 				"--folder-uri=${workspaceFolder}"
-			]
+			],
+			"preLaunchTask": "compile"
 		},
 		{
-			"name": "Extension Tests",
+			"name": "Run Extension Tests",
 			"type": "extensionHost",
 			"request": "launch",
 			"args": [
