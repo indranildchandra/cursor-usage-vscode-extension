@@ -4,27 +4,47 @@
 
 ## What It Gives You
 
-This extension displays your remaining Cursor fast-premium requests count in Cursor's status bar, with usage-based spending information shown when you've exhausted your included requests. It now includes intelligent reset date tracking and daily usage analytics to help you better manage your AI usage. Think of it as your personal AI usage speedometer with financial tracking and predictive insights.
+This extension displays your remaining Cursor fast-premium requests count in Cursor's status bar, with usage-based spending information shown when you've exhausted your included requests. It includes intelligent reset date tracking, daily usage analytics, and robust fault tolerance features. Think of it as your personal AI usage speedometer with financial tracking, predictive insights, and reliable data fetching.
+
+**Core Features:**
 
 - **Real-time tracking**: See your remaining requests at a glance (e.g., `⚡ 247`)
 - **Smart reset tracking**: Know exactly when your quota resets and how many days remain
 - **Usage analytics**: Daily usage rate tracking and quota exhaustion predictions
 - **Smart transitions**: When requests are exhausted, seamlessly shows spending vs limit (e.g., `$1.52/$150.00`)
 - **Smart color coding**: Visual warnings when you're running low on requests or approaching spend limits
+
+**Fault Tolerance & Reliability:**
+
+- **Retry mechanisms**: Automatically retries failed API calls up to 3 times with smart delays
+- **Intelligent caching**: Caches stable API responses (user info, teams) for 24 hours to reduce API load
+- **Cache invalidation**: Automatically clears stale cache when authentication changes
+- **Graceful degradation**: Continues working with cached data when APIs are unavailable
+- **Network resilience**: Handles various network errors with user-friendly messages
+
+**Enhanced User Experience:**
+
+- **Status bar timestamps**: Shows "Last updated at: [timestamp], Click to refresh"
 - **Enhanced tooltips**: Comprehensive breakdown with reset dates, usage patterns, and predictive warnings
 - **Click to refresh**: Quick manual refresh by clicking the status bar
 - **Automatic updates**: Configurable polling to keep data fresh
-- **Command Palette Access**: All key actions are available via commands.
+- **Command Palette Access**: All key actions are available via commands
 
 ## How It Works
 
-The extension authenticates with Cursor's API using your browser session cookie and uses a two-tier approach to provide usage insights:
+The extension authenticates with Cursor's API using your browser session cookie and implements a robust, fault-tolerant architecture:
 
-**For Team Users:** Fetches both individual user data (for reset dates and limits) and team usage data (for actual usage counts and spending), then combines them for comprehensive insights.
+**Data Fetching Strategy:**
 
-**For Individual Users:** Uses your personal usage data directly from Cursor's individual user API, showing request counts and reset dates.
+- **Retry Logic**: Failed API calls are automatically retried up to 3 times with progressive delays
+- **Intelligent Caching**: Stable data (user info, teams) is cached for 24 hours to reduce API load
+- **Cache Invalidation**: Cache is automatically cleared when authentication changes occur
 
-The extension gracefully falls back to individual data if team information is unavailable, ensuring it works for all users regardless of their Cursor setup.
+**For Team Users:** Fetches both individual user data (for reset dates and limits) and team usage data (for actual usage counts and spending), then combines them for comprehensive insights. Caching ensures fast loading even when team APIs are slow.
+
+**For Individual Users:** Uses your personal usage data directly from Cursor's individual user API, showing request counts and reset dates. The retry mechanism ensures reliable data fetching.
+
+The extension gracefully falls back to cached data when APIs are unavailable, ensuring it works for all users regardless of their Cursor setup or network conditions.
 
 **Visual Status Indicators:**
 
@@ -90,6 +110,7 @@ All commands are available from the Command Palette (`Cmd+Shift+P`).
 | `Set Poll Interval`   | Opens an input to configure the refresh interval.                                                        |
 | `Force Re-initialize` | Resets the extension, clears the cache, and forces a full data refresh. Useful if something seems stuck. |
 | `Open Settings`       | Opens the extension's settings UI.                                                                       |
+| `Test Daily Notification` | Manually triggers the daily notification for testing (development mode only).                         |
 
 _Tip: Click the status bar item to quickly refresh your usage data._
 
@@ -99,34 +120,40 @@ Hover over the status bar item to see comprehensive information:
 
 **When you have requests remaining:**
 
-```
-Resets in 23 days (2024-02-15) · 8.7 requests/day avg
+```text
+Resets in 23 days (2024-02-15) --> 8.7 requests/day avg
 
 Fast Premium Requests: 247/500 remaining (50.6% used)
 Spending: $1.52 of $150.00 limit (1.0% used)
 Remaining budget: $148.48
+
+Last updated at: 2/15/2024, 3:45:22 PM ; Click to refresh 🔄
 ```
 
 **When requests are exhausted:**
 
-```
-Resets in 23 days (2024-02-15) · 21.7 requests/day avg
+```text
+Resets in 23 days (2024-02-15) --> 21.7 requests/day avg
 
 Fast Premium Requests: 0/500 remaining (100% used)
 Spending: $1.52 of $150.00 limit (1.0% used)
 Remaining budget: $148.48
 ⚠️ No requests remaining
+
+Last updated at: 2/15/2024, 3:45:22 PM ; Click to refresh 🔄
 ```
 
 **With predictive warnings:**
 
-```
-Resets in 23 days (2024-02-15) · 25.0 requests/day avg
-⚠️ At current rate, quota exhausted in ~10 days
+```text
+Resets in 23 days (2024-02-15) --> 25.0 requests/day avg
+⚠️ At current rate, quota exhausts in ~10 days
 
 Fast Premium Requests: 250/500 remaining (50.0% used)
 Spending: $0.00 of $150.00 limit (0.0% used)
 Remaining budget: $150.00
+
+Last updated at: 2/15/2024, 3:45:22 PM ; Click to refresh 🔄
 ```
 
 **Key tooltip features:**
@@ -142,7 +169,7 @@ Additional contextual warnings:
 - `⚠️ Approaching spend limit` (≥80% of budget used)
 - `⚠️ No requests remaining`
 - `⚠️ Spend limit reached!`
-- `⚠️ At current rate, quota exhausted in ~X days`
+- `⚠️ At current rate, quota exhausts in ~X days`
 
 ## Security & Privacy
 
@@ -193,7 +220,7 @@ This extension is available on [Open VSX Registry](https://open-vsx.org/extensio
 
 ## Contributing
 
-We welcome contributions! Here's how to get started:
+We welcome contributions! For information on how to set up the development environment and run the test suite, please see our [Contributing Guide](CONTRIBUTING.md).
 
 ### Development Setup
 
@@ -223,6 +250,62 @@ This project uses Node.js v20. If you use `nvm`, you can run `nvm use` to automa
    - This will run the extension in a new VS Code window, where you can test its functionality.
    - Check the **Debug Console** in your original editor window for logs.
 
+### Running Tests
+
+The test suite can be run in two ways:
+
+#### **Option 1: VS Code Debugger (Recommended for Development)**
+
+For detailed information on how to set up the development environment and run the test suite, please see our [Contributing Guide](CONTRIBUTING.md).
+
+**Quick Start:**
+
+1. Set up your `.env` file with your Cursor session token (see Contributing Guide)
+2. Open the **Run and Debug** panel in VS Code
+3. Select **"Extension Tests"** from the dropdown
+4. Press the green play button to start debugging
+
+#### **Option 2: Command Line (For Automation/CI)**
+
+```bash
+# Compile and run tests from command line
+yarn test
+
+# Or compile first, then run
+yarn compile
+yarn test
+```
+
+**Environment Requirements:**
+
+- Requires `.env` file with `WorkosCursorSessionToken`
+- Uses your system's Cursor/VS Code installation (no download needed)
+- Uses real API data for comprehensive testing
+- Automatically detects and uses Cursor if available, falls back to VS Code
+
+**Test Output Visibility:**
+
+When running `yarn test`, the tests execute in a separate Cursor/VS Code instance:
+
+- **Command line shows**: Basic progress, which editor is being used, and final exit code (0 = success)
+- **Test details appear in**: The launched Cursor/VS Code instance's Debug Console
+- **Design Rationale**: VS Code extension tests run in the actual editor environment to test real-world behavior
+
+**To see detailed test results:**
+
+1. **Look for the launched Cursor/VS Code window** that opens automatically
+2. **Check the Debug Console** in that window (View → Debug Console)
+3. **For development debugging**: Use the VS Code debugger method (Option 1) for interactive debugging
+
+**CI/CD Notes:**
+
+- Tests run successfully in automated environments
+- Uses existing Cursor/VS Code installation
+- No additional downloads required
+- Returns proper exit codes for CI pipeline integration (0 = success)
+
+The test suite uses a "fetch-once, reuse-many" strategy with real API data for comprehensive testing.
+
 ### Building for Release
 
 ```bash
@@ -244,13 +327,51 @@ vsce package
 
 - There may be a network connectivity issue or the Cursor API is down.
 - Your cookie might have expired; try re-inserting it.
-- Run the `Cursor Usage: Force Re-initialize` command.
+- The extension will automatically retry failed requests up to 3 times.
+- Run the `Cursor Usage: Force Re-initialize` command to clear cache and retry.
+
+### Status bar shows old/stale data
+
+- The extension caches data for 24 hours to reduce API load.
+- Click the status bar item or run `Cursor Usage: Refresh Usage` to get fresh data.
+- Run `Cursor Usage: Force Re-initialize` to clear all cached data.
 
 ### Spending information not showing
 
 - **Individual users:** Spending data is only available for team users. Individual users will see request counts and reset dates only.
 - **Team users:** Spending data (`spendCents` and `hardLimitOverrideDollars`) may not be available for all teams. Ensure your team has usage-based billing configured.
 - The extension gracefully falls back to showing request counts when spending data is unavailable.
+
+### Cache issues
+
+- **Stale cache:** Use `Cursor Usage: Force Re-initialize` to clear all cached data.
+- **Cache corruption:** The extension automatically detects and clears corrupted cache entries.
+- **Storage quota:** If VS Code storage is full, cache operations may fail gracefully.
+
+### Network connectivity issues
+
+- **DNS errors:** Check your internet connection and DNS settings.
+- **Connection timeouts:** The extension waits up to 10 seconds per API attempt.
+- **Rate limiting:** The extension automatically handles rate limiting with retries.
+
+### Authentication issues
+
+- **Invalid cookie:** Re-insert your session cookie via `Cursor Usage: Insert cookie value`.
+- **Expired session:** Your Cursor session may have expired; log in again and update the cookie.
+- **Permission changes:** If you're a team user, ensure your team permissions haven't changed.
+
+### Expected Warnings (Safe to Ignore)
+
+During development and building, you may see these warnings which don't affect functionality:
+
+- **"No license field"**: This is a yarn display issue - the package.json correctly has `"license": "MIT"`
+- **"Engine vscode appears to be invalid"**: This is expected for VS Code extensions - the engine specification is correct
+
+These warnings are cosmetic and don't impact the extension's operation.
+
+### Note
+
+Use `npm run lint:markdown` to make sure the markdown files are linted before committing.
 
 ## License
 

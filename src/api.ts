@@ -1,7 +1,53 @@
 import * as https from "https";
-import { TeamsResponse, TeamDetails, SpendData, UserMeResponse, UserUsageResponse } from "./models";
+import {
+  TeamsResponse,
+  TeamDetails,
+  SpendData,
+  UserMeResponse,
+  UserUsageResponse,
+} from "./models";
 
 const BASE_URL = "https://cursor.com/api";
+const TIMEOUT = 30000; // 30-second timeout for all requests
+
+/**
+ * Higher-order function that wraps async API functions with retry logic.
+ * @param fn The async function to wrap with retries
+ * @param maxRetries Maximum number of retry attempts (default: 2 for 3 total attempts)
+ * @param delayMs Delay between retries in milliseconds (default: 100ms)
+ * @param timeoutMs Timeout per attempt in milliseconds (default: 10000ms)
+ * @returns Promise that resolves with the function result or rejects after all retries
+ */
+async function withRetry<T>(
+  fn: () => Promise<T>,
+  maxRetries: number = 2,
+  delayMs: number = 100,
+  timeoutMs: number = 10000,
+): Promise<T> {
+  let lastError: Error | undefined;
+
+  for (let attempt = 1; attempt <= maxRetries + 1; attempt++) {
+    try {
+      return await Promise.race([
+        fn(),
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error("API timeout")), timeoutMs),
+        ),
+      ]);
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+      console.warn(
+        `[Cursor Usage] API attempt ${attempt} failed: ${lastError.message}. Retrying in ${delayMs}ms...`,
+      );
+
+      if (attempt < maxRetries + 1) {
+        await new Promise((resolve) => setTimeout(resolve, delayMs));
+      }
+    }
+  }
+
+  throw lastError || new Error("Unknown API failure after retries");
+}
 
 /**
  * A generic and secure wrapper for making requests to the Cursor API using Node.js https module.
@@ -15,7 +61,7 @@ async function makeRequest<T>(
   method: "GET" | "POST",
   endpoint: string,
   userCookie: string,
-  body?: object
+  body?: object,
 ): Promise<T> {
   const url = `${BASE_URL}/${endpoint}`;
   console.log(`[Cursor Usage] Making ${method} request to ${endpoint}`);
@@ -26,7 +72,8 @@ async function makeRequest<T>(
       "Content-Type": "application/json",
       "Cookie": `WorkosCursorSessionToken=${userCookie}`,
       "Origin": "https://cursor.com"
-    }
+    },
+    timeout: TIMEOUT,
   };
 
   return new Promise<T>((resolve, reject) => {
@@ -60,6 +107,12 @@ async function makeRequest<T>(
       reject(error);
     });
 
+    // Handle request timeouts
+    req.on("timeout", () => {
+      req.destroy();
+      reject(new Error(`Request to ${url} timed out after ${TIMEOUT} seconds`));
+    });
+
     if (method === "POST" && body) {
       const requestBody = JSON.stringify(body);
       req.write(requestBody);
@@ -75,7 +128,7 @@ async function makeRequest<T>(
 async function post<T>(
   endpoint: string,
   userCookie: string,
-  body: object
+  body: object,
 ): Promise<T> {
   return makeRequest<T>("POST", endpoint, userCookie, body);
 }
@@ -98,7 +151,7 @@ export async function fetchTeams(cookie: string): Promise<TeamsResponse> {
 /** Fetches details for a specific team, including the user's ID within that team. */
 export async function fetchTeamDetails(
   teamId: number,
-  cookie: string
+  cookie: string,
 ): Promise<TeamDetails> {
   return post<TeamDetails>("dashboard/team", cookie, { teamId });
 }
@@ -106,9 +159,11 @@ export async function fetchTeamDetails(
 /** Fetches the spend data for all members of a specific team. */
 export async function fetchTeamSpend(
   teamId: number,
-  cookie: string
+  cookie: string,
 ): Promise<SpendData> {
-  return post<SpendData>("dashboard/get-team-spend", cookie, { teamId });
+  return withRetry(() =>
+    post<SpendData>("dashboard/get-team-spend", cookie, { teamId }),
+  );
 }
 
 /** Fetches the current user's information from /api/auth/me. */
@@ -117,6 +172,11 @@ export async function fetchUserMe(cookie: string): Promise<UserMeResponse> {
 }
 
 /** Fetches the current user's usage data from /api/usage?user=USER_ID. */
-export async function fetchUserUsage(userId: string, cookie: string): Promise<UserUsageResponse> {
-  return get<UserUsageResponse>(`usage?user=${userId}`, cookie);
+export async function fetchUserUsage(
+  userId: string,
+  cookie: string,
+): Promise<UserUsageResponse> {
+  return withRetry(() =>
+    get<UserUsageResponse>(`usage?user=${userId}`, cookie),
+  );
 }

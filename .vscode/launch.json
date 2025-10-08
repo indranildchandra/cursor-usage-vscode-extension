@@ -6,12 +6,20 @@
 			"type": "extensionHost",
 			"request": "launch",
 			"args": [
-				"--extensionDevelopmentPath=${workspaceFolder}"
+				"--extensionDevelopmentPath=${workspaceFolder}",
+				"--folder-uri=${workspaceFolder}"
 			],
-			"outFiles": [
-				"${workspaceFolder}/dist/**/*.js"
+			"preLaunchTask": "compile"
+		},
+		{
+			"name": "Run Extension Tests",
+			"type": "extensionHost",
+			"request": "launch",
+			"args": [
+				"--extensionDevelopmentPath=${workspaceFolder}",
+				"--extensionTestsPath=${workspaceFolder}/dist/test/suite/index"
 			],
-			"preLaunchTask": "${defaultBuildTask}"
+			"preLaunchTask": "compile"
 		}
 	]
 } 

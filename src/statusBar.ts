@@ -1,6 +1,7 @@
 import * as vscode from "vscode";
 
 let statusBarItem: vscode.StatusBarItem;
+let lastUpdateTimestamp: Date | null = null;
 
 /**
  * Interface for reset information
@@ -17,10 +18,10 @@ interface ResetInfo {
 export function createStatusBarItem() {
   statusBarItem = vscode.window.createStatusBarItem(
     vscode.StatusBarAlignment.Left,
-    100
+    100,
   );
   statusBarItem.command = "cursorUsage.refresh";
-  statusBarItem.tooltip = "Remaining Cursor fast-premium requests";
+  statusBarItem.tooltip = "Remaining Cursor fast-premium requests\n\nClick to refresh 🔄";
   statusBarItem.text = "$(zap) Loading...";
   statusBarItem.show();
 }
@@ -38,7 +39,7 @@ export function updateStatusBar(
   totalRequests: number,
   spendCents?: number,
   hardLimitDollars?: number,
-  resetInfo?: ResetInfo
+  resetInfo?: ResetInfo,
 ) {
   if (!statusBarItem) {
     return;
@@ -79,12 +80,12 @@ export function updateStatusBar(
   if (shouldShowError) {
     icon = "$(error)";
     statusBarItem.backgroundColor = new vscode.ThemeColor(
-      "statusBarItem.errorBackground"
+      "statusBarItem.errorBackground",
     );
   } else if (shouldShowWarning) {
     icon = "$(warning)";
     statusBarItem.backgroundColor = new vscode.ThemeColor(
-      "statusBarItem.warningBackground"
+      "statusBarItem.warningBackground",
     );
   }
 
@@ -109,13 +110,16 @@ export function updateStatusBar(
 
   statusBarItem.text = statusText;
 
+  // Update timestamp when status bar is successfully updated
+  lastUpdateTimestamp = new Date();
+
   // Update tooltip with detailed information
   updateTooltip(
     remainingRequests,
     totalRequests,
     spendCents,
     hardLimitDollars,
-    resetInfo
+    resetInfo,
   );
 }
 
@@ -132,7 +136,7 @@ function updateTooltip(
   totalRequests: number,
   spendCents?: number,
   hardLimitDollars?: number,
-  resetInfo?: ResetInfo
+  resetInfo?: ResetInfo,
 ) {
   if (!statusBarItem) {
     return;
@@ -150,7 +154,7 @@ function updateTooltip(
 
     const totalCycleDays = Math.ceil(
       (resetInfo.resetDate.getTime() - startOfCycle.getTime()) /
-        (1000 * 3600 * 24)
+        (1000 * 3600 * 24),
     );
     daysElapsed = totalCycleDays - resetInfo.daysRemaining;
 
@@ -172,7 +176,7 @@ function updateTooltip(
 
     // Add daily usage rate to the reset line if available
     if (dailyUsageRate > 0) {
-      resetText += ` · ${dailyUsageRate} requests/day avg`;
+      resetText += ` --> ${dailyUsageRate} requests/day avg`;
     }
 
     tooltip = `${resetText}\n`;
@@ -181,7 +185,7 @@ function updateTooltip(
     if (remainingRequests > 0 && dailyUsageRate > 0) {
       const estimatedDaysLeft = Math.ceil(remainingRequests / dailyUsageRate);
       if (estimatedDaysLeft < resetInfo.daysRemaining) {
-        tooltip += `⚠️ At current rate, quota exhausted in ~${estimatedDaysLeft} days\n`;
+        tooltip += `⚠️ At current rate, quota exhausts in ~${estimatedDaysLeft} days\n`;
       }
     }
 
@@ -194,7 +198,7 @@ function updateTooltip(
   if (spendCents !== undefined && hardLimitDollars !== undefined) {
     const spendDollars = spendCents / 100;
     const spendPercentage = ((spendDollars / hardLimitDollars) * 100).toFixed(
-      1
+      1,
     );
     const remainingDollars = (hardLimitDollars - spendDollars).toFixed(2);
 
@@ -224,7 +228,14 @@ function updateTooltip(
     }
   }
 
-  tooltip += `\n\nClick to refresh`;
+  // Add last update timestamp if available
+  if (lastUpdateTimestamp) {
+    const timeString = lastUpdateTimestamp.toLocaleString();
+    tooltip += `\n\nLast updated at: ${timeString} ; Click to refresh 🔄`;
+  }
+  else {
+    tooltip += `\n\nClick to refresh 🔄`;
+  }
 
   statusBarItem.tooltip = tooltip;
 }
@@ -240,15 +251,19 @@ export function setStatusBarError(message?: string) {
   const displayMessage = message || "Error";
   statusBarItem.text = `$(error) ${displayMessage}`;
   statusBarItem.backgroundColor = new vscode.ThemeColor(
-    "statusBarItem.errorBackground"
+    "statusBarItem.errorBackground",
   );
+
+  // Update timestamp when error state is set
+  lastUpdateTimestamp = new Date();
 
   if (displayMessage === "Team ID?") {
     statusBarItem.command = "cursorUsage.openSettings";
     statusBarItem.tooltip = "Click to set your Team ID in settings";
   } else {
     statusBarItem.command = "cursorUsage.refresh";
-    statusBarItem.tooltip = "Click to refresh usage data";
+    const timeString = lastUpdateTimestamp.toLocaleString();
+    statusBarItem.tooltip = `Error occurred at: ${timeString} ; Click to refresh usage data 🔄`;
   }
 }
 
@@ -262,8 +277,11 @@ export function setStatusBarWarning(message: string) {
   }
   statusBarItem.text = `$(warning) ${message}`;
   statusBarItem.backgroundColor = new vscode.ThemeColor(
-    "statusBarItem.warningBackground"
+    "statusBarItem.warningBackground",
   );
+
+  // Update timestamp when warning state is set
+  lastUpdateTimestamp = new Date();
 
   // If the warning is about setting the cookie, make the status bar item clickable
   // to trigger the cookie insertion command.
@@ -273,7 +291,8 @@ export function setStatusBarWarning(message: string) {
   } else {
     // Reset to default refresh command if the warning is something else
     statusBarItem.command = "cursorUsage.refresh";
-    statusBarItem.tooltip = "Click to refresh usage data";
+    const timeString = lastUpdateTimestamp.toLocaleString();
+    statusBarItem.tooltip = `Warning set at: ${timeString}\n\nClick to refresh usage data 🔄`;
   }
 }
 
